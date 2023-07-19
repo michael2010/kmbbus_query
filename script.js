@@ -69,6 +69,13 @@ var myRecords = [
     stop: "1E4E9FB5763C3436",
     seq: 16,
     service_type: 1
+  },
+  {
+    route: "53",
+    bound: "O",
+    stop: "8AFF8B43EC3E547F",
+    seq: 56,
+    service_type: 1
   }
 ];
 
