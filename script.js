@@ -196,6 +196,12 @@ $(function () {
     // data: etaRecords,
     columnDefs: [
       {
+        targets: 1,
+        render: function (data, type, row, meta) {
+          return data.replaceAll("\r\n", "<br/>");
+        }
+      },
+      {
         targets: 2,
         render: function (data, type, row, meta) {
           return data.replaceAll("\r\n", "<br/>");
@@ -432,7 +438,7 @@ async function buildETAObject(routeStopRecord, idx) {
   let etaRecord = {
     route: routeStopRecord.route,
     seq: routeStopRecord.seq,
-    name_tc: `${stopRecord.name_tc} -->${routeRecord?.dest_tc}`,
+    name_tc: `${stopRecord.name_tc} \r\n-->${routeRecord?.dest_tc}`,
     eta: "pending",
     stop: routeStopRecord.stop
   };
