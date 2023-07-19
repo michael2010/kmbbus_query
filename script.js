@@ -172,7 +172,7 @@ $(function () {
       { data: "seq", width: "5%" },
       { data: "name_tc", width: "40%" },
       { data: "eta", width: "40%" },
-      { data: "stop", width: "10%", className: "stopID" }
+      // { data: "stop", width: "10%", className: "stopID" }
     ],
     columnDefs: [
       {
@@ -189,9 +189,9 @@ $(function () {
     paging: false,
     ordering: false,
     columns: [
-      { data: "route", width: "50px" },
-      { data: "name_tc" },
-      { data: "eta", width: "120px" }
+      { data: "route", width: "5%" },
+      { data: "name_tc", width: "40%" },
+      { data: "eta", width: "40%" }
     ],
     // data: etaRecords,
     columnDefs: [
