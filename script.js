@@ -332,8 +332,8 @@ function buildRouteEta(etaRecords, bound) {
   return (etaStr = etaRecords.reduce((acc, cur) => {
     if (cur.dir == bound && cur.eta !== undefined && cur.eta !== null) {
       const nextBus = new Date(cur.eta);
-      let timePart = nextBus.toTimeString(); //.toLocaleTimeString("zh-Hant-HK");
-      timePart = timePart.slice(0, -38);
+      let timePart = `${nextBus.getHours().toString().padStart(2, '0')}:${nextBus.getMinutes().toString().padStart(2, '0')}`;
+      //timePart = timePart.slice(0, -38);
       const delta = (nextBus.getTime() - now) / 1000;
       let minutes = Math.floor(delta / 60);
       minutes = minutes < 1 ? "<1" : minutes.toString().padStart(2, "0");
