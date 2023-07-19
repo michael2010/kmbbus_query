@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Bus Route (KMB)</title>
+  <meta name="viewport" 
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"><link rel='stylesheet' href='https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css'>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css'>
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<table id="custom" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <!--       <th>Seq</th> -->
+      <!--<th>Stop ID</th>-->
+      <th>Route</th>
+      <th>Name</th>
+      <th>ETA</th>
+    </tr>
+  </thead>
+  </tfoot>
+</table>
+<br>
+<br>
+<select class="routeSelector" style="width: 450px;">
+<!--   <option>Please select</option> -->
+</select>
+<br>
+<table id="selectedRoute" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>Seq</th>
+      <th>Name</th>
+      <th>ETA</th>
+      <th>Add to List</th>
+    </tr>
+  </thead>
+  </tfoot>
+</table>
+<br>
+<!-- partial -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js'></script>
+<script src='https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.2/moment.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/dexie/3.2.4/dexie.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js'></script>
+<script src='https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
