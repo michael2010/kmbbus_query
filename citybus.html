@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<!--
+Created using JS Bin
+http://jsbin.com
+
+Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/77/edit)
+
+Released under the MIT license: http://jsbin.mit-license.org
+-->
+<meta name="robots" content="noindex">
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src='https://cdn.datatables.net/2.0.3/js/dataTables.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.1/dexie.min.js" integrity="sha512-ivrkdCfiR6zx/PLVgdDLJ9+8RkRn3wyXHrUj8wpdl+VtYUJqnw+TquLEd94cTbe9NlB06XtbPl9EnZdto6UNaQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.datatables.net/responsive/3.0.1/js/dataTables.responsive.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.1/css/responsive.dataTables.min.css">
+</head>
+<body>
+  
+  <table id="etaTable" class="display" style="width:100%">
+      <thead>
+          <tr>
+            <th>Delete</th>
+            <th>Direction</th>
+            <th>Stop Name</th>
+            <th>ETA</th>
+          </tr>
+      </thead>
+  </table>
+
+  <table id="myTable" class="display" style="width:100%">
+      <thead>
+          <tr>
+            <th>Route</th>
+            <th>Orig</th>
+            <th>Dest</th>
+            <th>Query</th>
+          </tr>
+      </thead>
+  </table>
+  
+  <table id="stopTable" class="display" style="width:100%">
+      <thead>
+          <tr>
+            <th>Direction</th>
+            <th>Stop Name</th>
+            <th>Sequence</th>
+            <th>Stop ID</th>
+            <th>Add</th>
+          </tr>
+      </thead>
+  </table>
+<script id="jsbin-javascript">
+//import _, { map } from 'underscore';
+
+$.ajaxSetup({
+  cache: true
+});
+//$('body').addClass('dark');
+
+//init db
+var db = new Dexie("ctb");
+db.version(5).stores({
+  routes: 'route,orig_tc,dest_tc',
+  routeStop: 'id++,[route+dir+seq+stop]',
+  stop: 'stop',
+  etaTarget: 'id++,[route+dir+stop]' 
+});
+
+var stopTbl = initStopTable();
+var etaTbl = initETA();
+db.etaTarget.orderBy('id').toArray().then(refreshETA);
+
+db.routes.toArray().then(function(routes) {
+  if (routes.length === 0)
+    return $.ajax({
+      url: 'https://rt.data.gov.hk/v2/transport/citybus/route/ctb'
+    }).then(function(data){
+      db.routes.bulkPut(data.data);
+      return data.data;
+    });
+  return routes;
+}).then(function(routes) {
+  let tbl = $('#myTable').DataTable({
+    data: routes,
+    pageLength: 100,
+    responsive: true,
+    scrollY: 200,
+    columns: [
+      {data: 'route', width: "70px"},
+      {data: 'orig_tc'},
+      {data: 'dest_tc'},
+      {
+        data: null,
+        width: "30px",
+        title: "Query",
+        defaultContent: '<button>Click!</button>',
+      }
+    ] 
+  }); 
+  tbl.on('click', 'button', function (e) {
+    let rowData = tbl.row(e.target.closest('tr')).data();
+    //alert(`Route is ${data.route}`);
+    
+    //in bounds
+    let inDef = queryEntries(db.routeStop, 
+                              {"route":rowData.route, "dir": 'I'},
+                             `https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${rowData.route}/inbound`);
+    
+    //out bounds
+    let outDef = queryEntries(db.routeStop, 
+                              {"route":rowData.route, "dir": 'O'},
+                             `https://rt.data.gov.hk/v2/transport/citybus/route-stop/CTB/${rowData.route}/outbound`);
+    
+    stopTbl.clear();
+    stopTbl.draw();
+    
+    let allData = $.when(inDef,outDef).then(function(rawInData, rawOutData){
+      let data = rawInData.concat(rawOutData);
+
+      
+      // inject attributes
+      data.forEach(function(item, idx, arr){
+        item.route = rowData.route;
+        item.stopName = '';
+        if(item.dir === 'O')
+          item.dirText = `-> ${rowData.dest_tc}`;
+        else
+          item.dirText = `-> ${rowData.orig_tc}`;
+      });
+      
+      refreshStopTable(data);
+      return data;
+    });
+        
+    allData.done(updateStopName);
+//     outDef.then(updateStopName);
+    return allData;
+  });
+});
+
+function queryEntries(table, clause, ajaxUrl){
+  /**
+    3 cases:
+    1. data in db -> direct return
+    2. data not in db and ajaxUrl avail
+      if ajax response is array and has at least one item -> bulk put and return items by query again
+      else if no item is returned -> return empty array
+      else put item in db and return items by query again
+    3. data not in db and ajaxUrl not avail -> put object in db and return items by query again
+  **/
+  
+    
+  return table.where(clause).toArray().then(function(data){
+    if(data.length>0){
+      return data;
+    } else if(ajaxUrl != null){
+      // no entry in db, query by ajax and return data in db
+      return $.ajax({
+        url: ajaxUrl,
+      }).then(function(rawData){
+        let response = [];
+        if(Array.isArray(rawData.data)){
+          if(rawData.data.length>0){
+            response = table.bulkPut(rawData.data);
+          }
+          else{
+            return [];
+          }
+        }
+        else{
+          response = table.put(rawData.data);
+        }
+        return wrapResponse(response, table, clause);
+      });
+    } else{
+      // no entry in db, put return data in db
+      return [];
+//       return wrapResponse(table.put(clause), table, clause);
+    }
+  });
+}
+
+function initStopTable(){
+  return $('#stopTable').DataTable({
+    data: [],
+    paging: false,
+    searching: false,
+    responsive: true,
+    rowId: 'stop',
+    order: [[5,'desc'],[2,'asc']],
+    columns: [
+      {data: 'dirText',width: "170px",},
+      {data: 'stopName'},
+      {data: 'seq', width: "30px"},
+      {data: 'stop', width: "30px"},
+      {
+        data: null,
+        width: "30px",
+        title: "Add",
+        defaultContent: '<button>Add</button>',
+      },
+      {data: 'dir',visible: false}
+    ]  
+  }); 
+  
+  
+}
+
+function refreshStopTable(stops){
+//   stopTbl.clear();
+  stopTbl.rows.add(stops);
+  stopTbl.draw();
+   
+  // rebuild click handler
+  stopTbl.off('click');
+  stopTbl.on('click', 'button', function (e) {
+    let rowData = stopTbl.row(e.target.closest('tr')).data();
+    
+    // add entry to database     
+    var newRecord = {"route":rowData.route, 
+                      "dir": rowData.dir, 
+                      'stop': rowData.stop,
+                      'stopName': rowData.stopName,
+                      'eta': [],
+                      "dir_text": rowData.dirText};
+    
+    queryEntries(db.etaTarget, 
+                 {"route":rowData.route, 
+                  "dir": rowData.dir, 
+                  'stop': rowData.stop}, null).then(function(result){
+      if(result.length==0){
+        db.etaTarget.add(newRecord)
+          .then(function(dataAdded){
+            console.log('added new record');
+          }, function(failed){
+            console.log('cannot add new record');
+        }).finally(function(){
+          db.etaTarget.orderBy('id').toArray().then(refreshETA);
+        });
+      }
+    });
+    
+  });
+}
+
+function updateStopName(data){
+  for(var i=0; i<data.length; i++){
+//     console.log(data[i].stop);
+    queryEntries(db.stop,
+                 {"stop":data[i].stop},
+                 `https://rt.data.gov.hk/v2/transport/citybus/stop/${data[i].stop}`)
+      .then(function(stops){
+      if(stops.length>0){
+        let table = $('#stopTable').DataTable();
+        table.rows((idx, data)=>{
+          return data.stop == stops[0].stop;
+        }).every(function(idx, tblLoop, rowLoop){
+          let a = this.data();
+          a.stopName = stops[0].name_tc;
+          this.data(a).draw();
+        });
+      }
+    });
+  }
+}
+
+
+function initETA(){
+  return $('#etaTable').DataTable({
+    data: [],
+    paging: false,
+    searching: false,
+    ordering: false,
+    responsive: true,
+    rowId: 'id',
+    columns: [
+      {
+        data: null,
+        width: "30px",
+        defaultContent: '<button>Remove!</button>',
+      },
+      {data: 'dir_text',width: "170px"},
+      {data: 'stopName'},
+      {data: 'eta', 
+       render: function ( data, type, row ) {
+         // loop array and write multiline
+         if(Array.isArray(data)){
+           return data.map((a)=>`<div>${Math.floor(Math.abs(Date.parse(a.eta)-Date.now())/60000)} mins</div>`).join('');
+//            return data.reduce((a,b)=>{
+//              return a + `<br/><div>${b.eta}</div>`;
+//            }, '');
+         }
+       },
+       width: "80px"},
+      {data: 'dir', visible: false}
+    ]
+  });
+}
+
+function refreshETA(idxData){
+//   console.log(idxData);
+  etaTbl.clear();
+  etaTbl.rows.add(idxData);
+  etaTbl.draw();
+  
+  // queue eta queries
+  idxData.forEach(function(item, idx, arr){
+    return $.ajax({
+      url: `https://rt.data.gov.hk/v2/transport/citybus/eta/CTB/${item.stop}/${item.route}`
+    }).then(function(rawData){
+      // update ETA field
+      item.eta = rawData.data;
+      // update eta table row
+      let row = etaTbl.row(idx);
+      row.data(item).draw();
+    });
+  })
+  
+  etaTbl.on('click', 'button', function (e) {
+    let row = etaTbl.row(e.target.closest('tr'));
+    let rowData = row.data();
+    
+    // remove record from database
+    db.etaTarget.where({id:rowData.id}).delete().then(function(){
+      // remove row
+      row.remove();
+      etaTbl.draw();
+    }, function(failed){
+      console.log(failed);
+    })
+  });
+}
+
+function wrapResponse(response, table, clause){
+  return response.then(function(data){
+    return table.where(clause).toArray();
+  });
+}
+</script>
+</body>
+</html>
