@@ -3,7 +3,7 @@
 Created using JS Bin
 http://jsbin.com
 
-Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/87/edit)
+Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/88/edit)
 
 Released under the MIT license: http://jsbin.mit-license.org
 -->
@@ -98,7 +98,7 @@ db.version(5).stores({
 $( function() {
     $( "#tabs" ).tabs();
   } );
-
+ 
 var stopTbl = initStopTable();
 var etaTbl = initETA();
 db.etaTarget.orderBy('id').toArray().then(refreshETA);
@@ -312,9 +312,9 @@ function initETA(){
       {
         data: null,
         width: "30px",
-        defaultContent: '<button>Remove!</button>',
+        defaultContent: '<button>X</button>',
       },
-      {data: 'route', width: "70px"},
+      {data: 'route', width: "30px"},
       {data: null,
        render: (data,type,row)=>{
          return `<div><b>${data.stopName}</b></div><div>${data.dir_text}</div>`
