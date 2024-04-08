@@ -3,7 +3,7 @@
 Created using JS Bin
 http://jsbin.com
 
-Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/77/edit)
+Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/79/edit)
 
 Released under the MIT license: http://jsbin.mit-license.org
 -->
@@ -285,8 +285,11 @@ function initETA(){
         width: "30px",
         defaultContent: '<button>Remove!</button>',
       },
-      {data: 'dir_text',width: "170px"},
-      {data: 'stopName'},
+      {data: 'route', width: "170px"},
+      {data: null,
+       render: (data,type,row)=>{
+         return `<div>${data.stopName}</div><div>${data.dir_text}</div>`
+       }},
       {data: 'eta', 
        render: function ( data, type, row ) {
          // loop array and write multiline
