@@ -3,7 +3,7 @@
 Created using JS Bin
 http://jsbin.com
 
-Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/80/edit)
+Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/87/edit)
 
 Released under the MIT license: http://jsbin.mit-license.org
 -->
@@ -17,12 +17,26 @@ Released under the MIT license: http://jsbin.mit-license.org
   <script src='https://cdn.datatables.net/2.0.3/js/dataTables.min.js'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.1/dexie.min.js" integrity="sha512-ivrkdCfiR6zx/PLVgdDLJ9+8RkRn3wyXHrUj8wpdl+VtYUJqnw+TquLEd94cTbe9NlB06XtbPl9EnZdto6UNaQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdn.datatables.net/responsive/3.0.1/js/dataTables.responsive.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.1/css/responsive.dataTables.min.css">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<style id="jsbin-css">
+.ui-tabs .ui-tabs-panel{
+  padding: unset !important;
+}
+</style>
 </head>
 <body>
   
-  <table id="etaTable" class="display" style="width:100%">
+  <div id="tabs" style="height:100%">
+  <ul>
+    <li><a href="#tabs-1">ETA</a></li>
+    <li><a href="#tabs-2">Routes</a></li>
+    <li><a href="#tabs-3">Stops</a></li>
+  </ul>
+  <div id="tabs-1">
+    <table id="etaTable" class="display" style="width:100%">
       <thead>
           <tr>
             <th>Delete</th>
@@ -31,9 +45,10 @@ Released under the MIT license: http://jsbin.mit-license.org
             <th>ETA</th>
           </tr>
       </thead>
-  </table>
-
-  <table id="myTable" class="display" style="width:100%">
+    </table>
+  </div>
+  <div id="tabs-2">
+    <table id="myTable" class="display" style="width:100%">
       <thead>
           <tr>
             <th>Route</th>
@@ -42,19 +57,27 @@ Released under the MIT license: http://jsbin.mit-license.org
             <th>Query</th>
           </tr>
       </thead>
-  </table>
-  
-  <table id="stopTable" class="display" style="width:100%">
+    </table>
+  </div>
+  <div id="tabs-3">
+    <table id="stopTable" class="display" style="width:100%">
       <thead>
           <tr>
-            <th>Direction</th>
             <th>Stop Name</th>
-            <th>Sequence</th>
+            <th>Seq</th>
             <th>Stop ID</th>
             <th>Add</th>
           </tr>
       </thead>
-  </table>
+    </table>
+  </div>
+</div>
+  
+  
+
+  
+  
+  
 <script id="jsbin-javascript">
 //import _, { map } from 'underscore';
 
@@ -71,6 +94,10 @@ db.version(5).stores({
   stop: 'stop',
   etaTarget: 'id++,[route+dir+stop]' 
 });
+ 
+$( function() {
+    $( "#tabs" ).tabs();
+  } );
 
 var stopTbl = initStopTable();
 var etaTbl = initETA();
@@ -89,8 +116,8 @@ db.routes.toArray().then(function(routes) {
   let tbl = $('#myTable').DataTable({
     data: routes,
     pageLength: 100,
-    responsive: true,
-    scrollY: 200,
+    //responsive: true,
+    //scrollY: 300,
     columns: [
       {data: 'route', width: "70px"},
       {data: 'orig_tc'},
@@ -193,10 +220,14 @@ function initStopTable(){
     searching: false,
     responsive: true,
     rowId: 'stop',
-    order: [[5,'desc'],[2,'asc']],
+    order: [[4,'desc'],[1,'asc']],
     columns: [
-      {data: 'dirText',width: "170px",},
-      {data: 'stopName'},
+      
+      {data: null, 
+       render:(data)=>{
+        return `<div><b>${data.stopName}</b></div><div>${data.dirText}</div>`
+       }
+      },
       {data: 'seq', width: "30px"},
       {data: 'stop', width: "30px"},
       {
@@ -208,8 +239,6 @@ function initStopTable(){
       {data: 'dir',visible: false}
     ]  
   }); 
-  
-  
 }
 
 function refreshStopTable(stops){
