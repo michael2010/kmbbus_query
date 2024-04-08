@@ -3,7 +3,7 @@
 Created using JS Bin
 http://jsbin.com
 
-Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/79/edit)
+Copyright (c) 2024 by michael2010 (http://jsbin.com/xowowed/80/edit)
 
 Released under the MIT license: http://jsbin.mit-license.org
 -->
@@ -26,7 +26,7 @@ Released under the MIT license: http://jsbin.mit-license.org
       <thead>
           <tr>
             <th>Delete</th>
-            <th>Direction</th>
+            <th>Route</th>
             <th>Stop Name</th>
             <th>ETA</th>
           </tr>
@@ -285,10 +285,10 @@ function initETA(){
         width: "30px",
         defaultContent: '<button>Remove!</button>',
       },
-      {data: 'route', width: "170px"},
+      {data: 'route', width: "70px"},
       {data: null,
        render: (data,type,row)=>{
-         return `<div>${data.stopName}</div><div>${data.dir_text}</div>`
+         return `<div><b>${data.stopName}</b></div><div>${data.dir_text}</div>`
        }},
       {data: 'eta', 
        render: function ( data, type, row ) {
